@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+API_USAGE_GUIDE.md
+AUTHENTICATION_INDICATORS.md
+BACKEND_API_REQUIREMENTS.md
+DEBUG_AUTH.md
+SIMPLIFIED_AUTH_MANAGEMENT.md
+*/package-lock.json

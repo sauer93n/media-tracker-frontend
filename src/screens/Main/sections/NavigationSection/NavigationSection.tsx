@@ -1,33 +1,18 @@
 import { LogInIcon, LogOutIcon, UserPlusIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../../components/ui/button";
-import { supabase } from "../../../../lib/supabase";
+import { apiClient, type User } from "../../../../lib/api";
 
-export const NavigationSection = (): JSX.Element => {
+interface NavigationSectionProps {
+  user: User | null;
+  loading: boolean;
+}
+
+export const NavigationSection = ({ user, loading }: NavigationSectionProps): JSX.Element => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      (async () => {
-        setUser(session?.user ?? null);
-      })();
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await apiClient.auth.signOut();
     navigate("/login");
   };
 
@@ -43,7 +28,7 @@ export const NavigationSection = (): JSX.Element => {
             {user ? (
               <div className="inline-flex items-center gap-4">
                 <span className="[font-family:'Jura',Helvetica] font-normal text-white text-sm tracking-[0] leading-[normal]">
-                  {user.email}
+                  {user.username}
                 </span>
                 <Button
                   onClick={handleSignOut}
