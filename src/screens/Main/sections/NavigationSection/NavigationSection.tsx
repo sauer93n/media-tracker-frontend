@@ -1,7 +1,7 @@
 import { LogInIcon, LogOutIcon, UserPlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../../components/ui/button";
-import { apiClient, type User } from "../../../../lib/api";
+import { apiClient, type User } from "../../../../lib/api/auth";
 
 interface NavigationSectionProps {
   user: User | null;
@@ -19,7 +19,7 @@ export const NavigationSection = ({ user, loading }: NavigationSectionProps): JS
   return (
     <header className="flex w-full items-center justify-between px-40 py-3 bg-transparent backdrop-blur-[5px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(5px)_brightness(100%)] bg-[linear-gradient(90deg,rgba(6,10,17,0.6)_55%,rgba(44,65,174,0.6)_98%)]">
       <div className="[font-family:'Jura',Helvetica] font-light text-white text-xl tracking-[0] leading-[normal] whitespace-nowrap">
-        Media Tracker
+        <a href="/">Media Tracker</a>
       </div>
 
       <nav className="inline-flex items-center justify-center gap-2.5">

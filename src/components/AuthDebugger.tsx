@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiClient, type AuthSession } from "../lib/api";
+import { apiClient, type AuthSession } from "../lib/api/auth";
 
 export const AuthDebugger = (): JSX.Element => {
   const [session, setSession] = useState<AuthSession | null>(null);

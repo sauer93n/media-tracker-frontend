@@ -4,7 +4,8 @@ import { useLocation } from "react-router-dom";
 import { NavigationSection } from "./sections/NavigationSection";
 import { ReviewListSection } from "./sections/ReviewListSection";
 import { AuthDebugger } from "../../components/AuthDebugger";
-import { apiClient, type User } from "../../lib/api";
+import { apiClient, type User } from "../../lib/api/auth";
+import { FooterSection } from "./sections/FooterSection";
 
 export const Main = (): JSX.Element => {
   const [user, setUser] = useState<User | null>(null);
@@ -17,7 +18,6 @@ export const Main = (): JSX.Element => {
       try {
         // Force refresh to always call /me endpoint
         const { data: { session } } = await apiClient.auth.getSession(true);
-        console.log('Main: Fetched user data:', session);
         setUser(session?.user ?? null);
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -31,9 +31,10 @@ export const Main = (): JSX.Element => {
   }, [location.key]); // Re-check auth whenever we navigate to this page
 
   return (
-    <div className="bg-slate-900 w-full min-w-[1440px] flex flex-col">
+    <div className="bg-slate-900 h-screen w-full min-w-[1440px] flex flex-col">
       <NavigationSection user={user} loading={loading} />
       <ReviewListSection />
+      <FooterSection />
       {/* <AuthDebugger /> */}
     </div>
   );

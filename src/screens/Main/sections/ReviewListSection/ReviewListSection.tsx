@@ -1,96 +1,53 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../../../../components/ui/button";
-import { Card, CardContent } from "../../../../components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
+import { getAllReviews, getMyReviews } from "../../../../lib/api/reviews";
+import { ReviewList } from "../../../../components/ui/reviewList";
+import { Review } from "../../../../lib/models/review";
+import { transformReview } from "../../../../lib/transformers/reviewTransformer";
+import { getMediaDetails, getPosterImage } from "../../../../lib/api/media";
+import { PlusIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   { id: "movies", label: "Movies" },
-  { id: "series", label: "Series" },
-  { id: "anime", label: "Anime" },
-  { id: "cartoons", label: "Cartoons" },
-  { id: "games", label: "Games" },
-  { id: "actors", label: "Actors" },
+  { id: "series", label: "Series" }
 ];
 
-const reviews = [
-  {
-    id: 1,
-    entityPhoto: "/entity-photo.svg",
-    title: "Inception (2010)",
-    rating: 8.5,
-    reviewTitle: "Review Title",
-    reviewContent:
-      "Review contentReview contentReview contentReview contentReview Review contentReview contentReview contentReview contentReview contentReview contentReview contentReview Review contentReview contentReview contentReview contentReview contentReview contentReview contentReview Review contentReview contentReview content",
-    likes: 555,
-    dislikes: "1.1k",
-  },
-  {
-    id: 2,
-    entityPhoto: "/entity-photo.svg",
-    title: "Inception (2010)",
-    rating: 8.5,
-    reviewTitle: "Review Title",
-    reviewContent:
-      "Review contentReview contentReview contentReview contentReview Review contentReview contentReview contentReview contentReview contentReview contentReview contentReview Review contentReview contentReview contentReview contentReview contentReview contentReview contentReview Review contentReview contentReview content",
-    likes: 555,
-    dislikes: "1.1k",
-  },
-  {
-    id: 3,
-    entityPhoto: "/entity-photo.svg",
-    title: "Inception (2010)",
-    rating: 8.5,
-    reviewTitle: "Review Title",
-    reviewContent:
-      "Review contentReview contentReview contentReview contentReview Review contentReview contentReview contentReview contentReview contentReview contentReview contentReview Review contentReview contentReview contentReview contentReview contentReview contentReview contentReview Review contentReview contentReview content",
-    likes: 555,
-    dislikes: "1.1k",
-  },
-];
-
-export const ReviewListSection = (): JSX.Element => {
+export const MyReviewsListSection = (): JSX.Element => {
   const [activeCategory, setActiveCategory] = useState("movies");
+  const [loading, setLoading] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const navigate = useNavigate();
 
-  const renderStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    const emptyStars = 10 - fullStars - (hasHalfStar ? 1 : 0);
+  useEffect(() => {
+    const fetchReviews = async () => {
+      setLoading(true);
+      try {
+        const reviews: Review[] = (await getAllReviews()).data.map(transformReview);
+        await Promise.all(reviews.map(async (review) => {
+          // Fetch media details for each review
+          // This assumes you have a function to get media details by ID
+          const mediaDetails = await getMediaDetails(review.referenceId, review.referenceType);
+          const poster = await getPosterImage(review.referenceType, review.referenceId);
+          review.media = mediaDetails;
+          review.media.posterUrl = poster;
+        }));
 
-    return (
-      <div className="inline-flex items-center justify-center gap-[5px]">
-        {Array.from({ length: fullStars }).map((_, index) => (
-          <img
-            key={`full-${index}`}
-            className="w-6 h-6"
-            alt="Star"
-            src="/ic-baseline-star.svg"
-          />
-        ))}
-        {hasHalfStar && (
-          <img
-            className="w-6 h-6"
-            alt="Half star"
-            src="/ic-baseline-star-half.svg"
-          />
-        )}
-        {Array.from({ length: emptyStars }).map((_, index) => (
-          <img
-            key={`empty-${index}`}
-            className="w-6 h-6"
-            alt="Empty star"
-            src="/ic-baseline-star-border.svg"
-          />
-        ))}
-        <span className="[font-family:'Jura',Helvetica] font-normal text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
-          {rating}/10
-        </span>
-      </div>
-    );
-  };
+        setReviews(reviews);
+      } catch (error) {
+        console.error(`Error fetching reviews: ${error}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [activeCategory]);
 
   return (
-    <section className="flex flex-col items-start gap-2.5 px-40 py-2.5 w-full">
-      <nav className="flex items-center justify-center gap-[123px] px-0 py-2.5 w-full">
+    <section className="flex flex-col items-start gap-2.5 px-40 py-2.5 w-full flex-1 overflow-hidden">
+      <nav className="flex items-center justify-center gap-[123px] px-0 py-2.5 w-full flex-shrink-0">
         <Tabs
           value={activeCategory}
           onValueChange={setActiveCategory}
@@ -127,76 +84,27 @@ export const ReviewListSection = (): JSX.Element => {
         </div>
       </nav>
 
-      <div className="flex flex-col items-center gap-2.5 p-2.5 flex-1 w-full overflow-hidden">
-        {reviews.map((review) => (
-          <Card
-            key={review.id}
-            className="flex h-[340px] items-start gap-2.5 p-5 w-full bg-[#0c0d27] rounded-lg overflow-hidden shadow-[4px_4px_4px_#00000040] border-0"
-          >
-            <CardContent className="flex items-start gap-2.5 p-0 w-full h-full">
-              <img
-                className="flex-[0_0_auto] h-[300px]"
-                alt="Entity photo"
-                src={review.entityPhoto}
-              />
+      {loading ? (
+        <div className="flex justify-center items-center w-full h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7167fa]"></div>
+          <span className="ml-3 [font-family:'Jura',Helvetica] font-light text-white text-sm tracking-[0] leading-[normal]">Loading...</span>
+        </div>
+      ) : (
+        <ReviewList reviews={[...reviews, ...reviews, ...reviews, ...reviews, ...reviews]} />
+      )}
 
-              <div className="flex flex-col h-[300px] items-start gap-2.5 pt-2.5 pb-0 px-2.5 flex-1">
-                <h2 className="mt-[-1.00px] [font-family:'Jura',Helvetica] font-bold text-white text-4xl tracking-[0] leading-[normal] whitespace-nowrap">
-                  {review.title}
-                </h2>
-
-                {renderStars(review.rating)}
-
-                <div className="flex flex-col items-end justify-end gap-2.5 pl-0 pr-[30px] py-0 w-full">
-                  <div className="flex flex-col items-start gap-2.5 w-full">
-                    <h3 className="mt-[-1.00px] [font-family:'Jura',Helvetica] font-normal text-white text-2xl tracking-[0] leading-[normal] whitespace-nowrap">
-                      {review.reviewTitle}
-                    </h3>
-
-                    <p className="[font-family:'Jura',Helvetica] font-normal text-white text-sm tracking-[0] leading-[14.0px] overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:6] [-webkit-box-orient:vertical]">
-                      {review.reviewContent}
-                    </p>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 w-full">
-                    <Button
-                      variant="link"
-                      className="inline-flex items-end gap-2.5 overflow-hidden border-b [border-bottom-style:solid] border-[#0004ff] h-auto p-0 rounded-none"
-                    >
-                      <span className="mt-[-2.00px] ml-[-1.00px] [-webkit-text-stroke:1px_#000000] [font-family:'Jura',Helvetica] font-bold text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
-                        Read full
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2.5 px-2.5 py-0 w-full items-center">
-                  <button className="inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer">
-                    <img
-                      className="w-6 h-6"
-                      alt="Like"
-                      src="/icon-park-outline-like.svg"
-                    />
-                    <span className="[font-family:'Jura',Helvetica] font-normal text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
-                      {review.likes}
-                    </span>
-                  </button>
-
-                  <button className="inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer">
-                    <img
-                      className="w-6 h-6"
-                      alt="Dislike"
-                      src="/icon-park-outline-dislike.svg"
-                    />
-                    <span className="[font-family:'Jura',Helvetica] font-normal text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
-                      {review.dislikes}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex self-end w-full max-h-max px-0 py-2.5">
+        <Button
+          onClick={() => {
+            navigate("/create-review");
+          }}
+          className="bg-[#00116a] rounded-lg inline-flex items-center justify-center gap-2.5 p-2 h-auto hover:opacity-90 flex-1"
+        >
+          <PlusIcon className="w-6 h-6 text-white" />
+          <span className="[font-family:'Jura',Helvetica] font-light text-white text-xl tracking-[0] leading-[normal]">
+            Add Review
+          </span>
+        </Button>
       </div>
     </section>
   );

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
-import { apiClient } from "../../lib/api";
+import { apiClient } from "../../lib/api/auth";
+import { GoToDashboard } from "../../components/ui/goToDashboard";
 
 export const SignUp = (): JSX.Element => {
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ export const SignUp = (): JSX.Element => {
 
   return (
     <div className="bg-slate-900 w-full min-h-screen flex items-center justify-center px-4">
+      <GoToDashboard />
       <Card className="w-full max-w-md bg-[#0c0d27] border-0 shadow-[4px_4px_4px_#00000040]">
         <CardContent className="p-8">
           <div className="flex flex-col gap-6">
