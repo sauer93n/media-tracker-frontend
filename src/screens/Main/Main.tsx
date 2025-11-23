@@ -1,11 +1,8 @@
 
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { NavigationSection } from "./sections/NavigationSection";
 import { ReviewListSection } from "./sections/ReviewListSection";
-import { AuthDebugger } from "../../components/AuthDebugger";
 import { apiClient, type User } from "../../lib/api/auth";
-import { FooterSection } from "./sections/FooterSection";
 
 export const Main = (): JSX.Element => {
   const [user, setUser] = useState<User | null>(null);
@@ -31,10 +28,8 @@ export const Main = (): JSX.Element => {
   }, [location.key]); // Re-check auth whenever we navigate to this page
 
   return (
-    <div className="bg-slate-900 h-screen w-full min-w-[1440px] flex flex-col">
-      <NavigationSection user={user} loading={loading} />
+    <div className="bg-slate-900 h-full w-full min-w-[1440px] flex flex-col">
       <ReviewListSection />
-      <FooterSection />
       {/* <AuthDebugger /> */}
     </div>
   );

@@ -30,3 +30,64 @@ export const getMyReviews = async (): Promise<PagedResult<ReviewDTO>> => {
     }
     throw new Error('Failed to fetch my reviews');
 }
+
+export const createReview = async (review: Partial<ReviewDTO>): Promise<ReviewDTO> => {
+    var response: Response = await fetch(`${API_BASE_URL}/api/review/create`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(review),
+    });
+    if (response.ok) {
+      const data: ReviewDTO = await response.json();
+      return data;
+    }
+    throw new Error('Failed to create review');
+}
+
+export const deleteReview = async (reviewId: string): Promise<void> => {
+    var response: Response = await fetch(`${API_BASE_URL}/api/review/${reviewId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+    });
+    if (response.ok) {
+      return;
+    }
+    throw new Error('Failed to delete review');
+}
+
+export const getReviewById = async (reviewId: string): Promise<ReviewDTO> => {
+    var response: Response = await fetch(`${API_BASE_URL}/api/review/${reviewId}`, {
+        method: 'GET',
+        credentials: 'include',
+    });
+    if (response.ok) {
+      const data: ReviewDTO = await response.json();
+      return data;
+    }
+    throw new Error('Failed to fetch review');
+}
+
+export const likeReview = async (reviewId: string): Promise<void> => {
+    var response: Response = await fetch(`${API_BASE_URL}/api/review/${reviewId}/like`, {
+        method: 'POST',
+        credentials: 'include',
+    });
+    if (response.ok) {
+      return;
+    }
+    throw new Error('Failed to like review');
+}
+
+export const dislikeReview = async (reviewId: string): Promise<void> => {
+    var response: Response = await fetch(`${API_BASE_URL}/api/review/${reviewId}/dislike`, {
+        method: 'POST',
+        credentials: 'include',
+    });
+    if (response.ok) {
+      return;
+    }
+    throw new Error('Failed to dislike review');
+}

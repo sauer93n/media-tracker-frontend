@@ -90,13 +90,13 @@ export const MyReviewsListSection = (): JSX.Element => {
           <span className="ml-3 [font-family:'Jura',Helvetica] font-light text-white text-sm tracking-[0] leading-[normal]">Loading...</span>
         </div>
       ) : (
-        <ReviewList reviews={[...reviews, ...reviews, ...reviews, ...reviews, ...reviews]} />
+        <ReviewList reviews={reviews} />
       )}
 
       <div className="flex self-end w-full max-h-max px-0 py-2.5">
         <Button
           onClick={() => {
-            navigate("/create-review");
+            navigate("/create-review/movie");
           }}
           className="bg-[#00116a] rounded-lg inline-flex items-center justify-center gap-2.5 p-2 h-auto hover:opacity-90 flex-1"
         >

@@ -1,20 +1,46 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Main } from "./screens/Main";
 import { Login } from "./screens/Login";
 import { SignUp } from "./screens/SignUp";
 import { CreateReview } from "./screens/CreateReview";
+import { PageLayout } from "./components/layout/PageLayout";
+import { AuthLayout } from "./components/layout/AuthLayout";
 
 createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Main />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/create-review" element={<CreateReview />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Routes that use the main layout */}
+        <Route
+          path="/"
+          element={
+            <PageLayout>
+              <Main />
+            </PageLayout>
+          }
+        />
+        <Route
+          path="/create-review/:mediaType"
+          element={
+            <PageLayout>
+              <CreateReview />
+            </PageLayout>
+          }
+        />
+
+        {/* Routes without the layout (e.g., Login, SignUp) */}
+        <Route path="/login" element={
+          <AuthLayout>
+            <Login />
+          </AuthLayout>
+        } />
+        <Route path="/signup" element={
+          <AuthLayout>
+            <SignUp />
+          </AuthLayout>
+        } />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
