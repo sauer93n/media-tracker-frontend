@@ -12,7 +12,6 @@ createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        {/* Routes that use the main layout */}
         <Route
           path="/"
           element={
@@ -29,17 +28,19 @@ createRoot(document.getElementById("app") as HTMLElement).render(
             </PageLayout>
           }
         />
-
-        {/* Routes without the layout (e.g., Login, SignUp) */}
-        <Route path="/login" element={
-          <AuthLayout>
-            <Login />
-          </AuthLayout>
+        <Route 
+          path="/login" 
+          element={
+            <AuthLayout>
+              <Login />
+            </AuthLayout>
         } />
-        <Route path="/signup" element={
-          <AuthLayout>
-            <SignUp />
-          </AuthLayout>
+        <Route 
+          path="/signup" 
+          element={
+            <AuthLayout>
+              <SignUp />
+            </AuthLayout>
         } />
       </Routes>
     </BrowserRouter>

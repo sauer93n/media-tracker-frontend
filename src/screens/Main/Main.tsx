@@ -5,15 +5,14 @@ import { ReviewListSection } from "./sections/ReviewListSection";
 import { apiClient, type User } from "../../lib/api/auth";
 
 export const Main = (): JSX.Element => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setUser] = useState<User | null>(null);
+  const [, setLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
       setLoading(true);
       try {
-        // Force refresh to always call /me endpoint
         const { data: { session } } = await apiClient.auth.getSession(true);
         setUser(session?.user ?? null);
       } catch (error) {
@@ -25,12 +24,11 @@ export const Main = (): JSX.Element => {
     };
 
     checkAuth();
-  }, [location.key]); // Re-check auth whenever we navigate to this page
+  }, [location.key]);
 
   return (
     <div className="bg-slate-900 h-full w-full min-w-[1440px] flex flex-col">
       <ReviewListSection />
-      {/* <AuthDebugger /> */}
     </div>
   );
 };

@@ -6,6 +6,8 @@ export const transformReview = (review: ReviewDTO): Review => {
         authorId: review.authorId,
         content: review.content,
         rating: review.rating,
+        isLikedByUser: review.isLikedByUser,
+        isDislikedByUser: review.isDislikedByUser,
         referenceId: review.referenceId,
         referenceType: review.referenceType,
         likes: review.likes,

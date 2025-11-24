@@ -8,6 +8,8 @@ export type ReviewDTO = {
   authorId: string;
   content: string;
   rating: number;
+  isLikedByUser: boolean;
+  isDislikedByUser: boolean;
   referenceId: string;
   referenceType: ReferenceType;
   likes: number;

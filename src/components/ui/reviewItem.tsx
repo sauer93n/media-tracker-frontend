@@ -16,13 +16,13 @@ export const ReviewItem = ({ review }: ReviewProps) => {
     const like = async (reviewId: string) => {
         await likeReview(reviewId);
         const updatedReview = await getReviewById(reviewId);
-        setReviewState({...reviewState, likes: updatedReview.likes});
+        setReviewState({...reviewState, likes: updatedReview.likes, dislikes: updatedReview.dislikes, isLikedByUser: updatedReview.isLikedByUser, isDislikedByUser: updatedReview.isDislikedByUser });
     };
 
     const dislike = async (reviewId: string) => {
         await dislikeReview(reviewId);
         const updatedReview = await getReviewById(reviewId);
-        setReviewState({...reviewState, dislikes: updatedReview.dislikes});
+        setReviewState({...reviewState, likes: updatedReview.likes, dislikes: updatedReview.dislikes, isDislikedByUser: updatedReview.isDislikedByUser, isLikedByUser: updatedReview.isLikedByUser });
     };
 
     const renderStars = (rating: number) => {
@@ -104,22 +104,26 @@ export const ReviewItem = ({ review }: ReviewProps) => {
                 </div>
 
                 <div className="flex justify-end gap-2.5 px-2.5 py-0 w-full items-center">
-                <button className="inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer"
+                <button className={
+                        "inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer" +
+                        (reviewState.isLikedByUser ? " opacity-50" : "")}
                     onClick={() => {
                         like(reviewState.id);
                     }}
                     >
                     <img
-                    className="w-6 h-6"
-                    alt="Like"
-                    src="/icon-park-outline-like.svg"
+                        className="w-6 h-6"
+                        alt="Like"
+                        src="/icon-park-outline-like.svg"
                     />
                     <span className="[font-family:'Jura',Helvetica] font-normal text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
                     {reviewState.likes}
                     </span>
                 </button>
 
-                <button className="inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer"
+                <button className={
+                        "inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer" +
+                        (reviewState.isDislikedByUser ? " opacity-50" : "")}
                     onClick={() => {
                         dislike(reviewState.id);
                     }}

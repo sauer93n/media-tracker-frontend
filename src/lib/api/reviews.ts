@@ -5,15 +5,14 @@ import { ReviewDTO } from "./contracts/review";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5261';
 
-export const getAllReviews = async (): Promise<PagedResult<ReviewDTO>> => {
-    var response: Response = await fetch(`${API_BASE_URL}/api/review`, {
+export const getAllReviews = async (pageNumber: number, pageSize: number): Promise<PagedResult<ReviewDTO>> => {
+    var response: Response = await fetch(`${API_BASE_URL}/api/review?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
         method: 'GET',
         credentials: 'include',
     });
 
     if (response.ok) {
       const data: PagedResult<ReviewDTO> = await response.json();
-      // Process the fetched reviews data
       return data;
     }
     throw new Error('Failed to fetch reviews');

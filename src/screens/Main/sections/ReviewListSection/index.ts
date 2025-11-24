@@ -1,1 +1,1 @@
-export { MyReviewsListSection as ReviewListSection } from "./ReviewListSection";
+export { ReviewsListSection as ReviewListSection } from "./ReviewListSection";

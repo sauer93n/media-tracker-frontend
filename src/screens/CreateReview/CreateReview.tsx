@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useCombobox } from 'downshift';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { searchMedia, MediaSearchResult, getMediaDetails, getPosterImage } from '../../lib/api/media';
+import { searchMedia, getMediaDetails, getPosterImage } from '../../lib/api/media';
 import { Button } from '../../components/ui/button';
 import { MediaDetailsDTO } from '../../lib/api/contracts/media';
 import { ReferenceType } from '../../lib/api/contracts/common';

@@ -46,16 +46,14 @@ class AuthClient {
   private listeners: ((event: string, session: AuthSession | null) => void)[] = [];
 
   constructor() {
-    // Check if user is authenticated on initialization
     this.checkAuthStatus();
   }
 
   private async checkAuthStatus(): Promise<void> {
     try {
-      // Make a request to verify if the user is authenticated via httpOnly cookies
       const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         method: 'GET',
-        credentials: 'include', // Include httpOnly cookies
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -97,7 +95,7 @@ class AuthClient {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Include cookies for httpOnly cookie authentication
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
@@ -110,7 +108,6 @@ class AuthClient {
         };
       }
 
-      // Update session state after successful login
       const session: AuthSession = {
         user: {
             id: data.id,
@@ -151,7 +148,7 @@ class AuthClient {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Include cookies
+        credentials: 'include',
         body: JSON.stringify({ username, email, password }),
       });
 
@@ -187,20 +184,18 @@ class AuthClient {
     try {
       await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
-        credentials: 'include', // Include httpOnly cookies for logout
+        credentials: 'include',
       });
 
       this.notifyListeners('auth_change', null);
       return { error: null };
     } catch (error) {
-      // Even if the API call fails, we should clear the local session
       this.notifyListeners('auth_change', null);
       return { error: null };
     }
   }
 
   async getSession(forceRefresh: boolean = false): Promise<{ data: { session: AuthSession | null } }> {
-    // Always check authentication status if forceRefresh is true or if no session is cached
     if (forceRefresh || this.session === null) {
       await this.checkAuthStatus();
     }
@@ -215,7 +210,6 @@ class AuthClient {
   onAuthStateChange(callback: (event: string, session: AuthSession | null) => void): { data: { subscription: { unsubscribe: () => void } } } {
     this.listeners.push(callback);
 
-    // Immediately call the callback with current session state
     if (this.session !== null) {
       callback('initial', this.session);
     }
