@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm i --legacy-peer-deps
 
 # Copy all source files
 COPY . .
@@ -17,16 +17,17 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:18-alpine
+WORKDIR /app
 
-# Copy built assets from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# Install serve globally
+RUN npm install -g serve
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy built files
+COPY --from=build /app/dist ./dist
 
-# Expose port 80
-EXPOSE 80
+# Expose port
+EXPOSE 3000
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Serve the app
+CMD ["serve", "-s", "dist", "-l", "3000"]
