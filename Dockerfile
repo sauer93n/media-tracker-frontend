@@ -4,8 +4,7 @@ FROM node:18-alpine AS build
 # Set working directory
 WORKDIR /app
 
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV MT_API_BASE_URL=$VITE_API_BASE_URL
 
 # Copy package files
 COPY package*.json ./
@@ -29,7 +28,10 @@ RUN npm install -g serve
 # Copy built files
 COPY --from=build /app/dist ./dist
 
+COPY env.sh /app/env.sh
+RUN chmod +x /app/env.sh
+
 # Expose port
 EXPOSE 3000
 
-ENTRYPOINT ["serve", "-s", "dist", "-l", "3000"]
+ENTRYPOINT ["/app/env.sh"]
