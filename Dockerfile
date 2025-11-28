@@ -29,10 +29,7 @@ RUN npm install -g serve
 # Copy built files
 COPY --from=build /app/dist ./dist
 
-COPY env.sh /app/env.sh
-RUN chmod +x /app/env.sh
-
 # Expose port
 EXPOSE 3000
 
-ENTRYPOINT ["/app/env.sh"]
+ENTRYPOINT ["serve", "-s", "dist", "-l", "3000"]
