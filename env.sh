@@ -1,5 +1,5 @@
 #!/bin/sh
-for i in $(env | grep MT_)
+for i in $(env | grep VITE_)
 do
     key=$(echo $i | cut -d '=' -f 1)
     value=$(echo $i | cut -d '=' -f 2-)
