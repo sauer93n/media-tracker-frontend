@@ -3,7 +3,7 @@
 import { PagedResult } from "./contracts/common";
 import { ReviewDTO } from "./contracts/review";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5261';
+const API_BASE_URL = window.config?.apiUrl || 'http://localhost:5261';
 
 export const getAllReviews = async (pageNumber: number, pageSize: number): Promise<PagedResult<ReviewDTO>> => {
     var response: Response = await fetch(`${API_BASE_URL}/api/review?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
