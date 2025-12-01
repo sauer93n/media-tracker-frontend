@@ -11,4 +11,7 @@ export type PagedResult<T> = {
 /**
  * Enum for different types of media references
  */
-export type ReferenceType = 'Movie' | 'TV';
+export enum ReferenceType {
+  Movie = 'Movie',
+  Tv = 'Tv',
+}

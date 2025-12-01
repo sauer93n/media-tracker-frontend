@@ -1,5 +1,6 @@
 import React from "react";
 import { GoToDashboard } from "../ui/goToDashboard";
+import { Toaster } from "react-hot-toast";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -8,12 +9,13 @@ interface AuthLayoutProps {
 export const AuthLayout = ({ children }: AuthLayoutProps): JSX.Element => {
   return (
     <div className="bg-slate-900 w-full h-screen flex flex-col items-center px-4">
-          <div className="w-full flex flex-start">
-            <GoToDashboard />
-          </div>
+        <div className="w-full flex flex-start">
+          <GoToDashboard />
+        </div>
         <div className="w-full flex flex-1 justify-center items-center">
           {children}
         </div>
+        <Toaster />
     </div>  
   );
 };

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { FooterSection } from "../../screens/Main/sections/FooterSection";
 import { NavigationSection } from "../../screens/Main/sections/NavigationSection";
 import { apiClient, type User } from "../../lib/api/auth";
+import { Toaster } from "react-hot-toast";
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,9 @@ export const PageLayout = ({ children }: PageLayoutProps): JSX.Element => {
       <NavigationSection user={user} loading={loading} />
         <main className="flex-1 h-full w-full flex flex-col overflow-hidden">
           {children}
+          <div>
+            <Toaster position="bottom-right" toasterId="page-layout" />
+          </div>
         </main>
       <FooterSection />
     </div>

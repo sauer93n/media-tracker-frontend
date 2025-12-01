@@ -7,6 +7,7 @@ import { SignUp } from "./screens/SignUp";
 import { CreateReview } from "./screens/CreateReview";
 import { PageLayout } from "./components/layout/PageLayout";
 import { AuthLayout } from "./components/layout/AuthLayout";
+import { UpdateReview } from "./screens/UpdateReview";
 
 createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>
@@ -28,8 +29,16 @@ createRoot(document.getElementById("app") as HTMLElement).render(
             </PageLayout>
           }
         />
-        <Route 
-          path="/login" 
+        <Route
+          path="/edit-review/:reviewId"
+          element={
+            <PageLayout>
+              <UpdateReview />
+            </PageLayout>
+          }
+        />
+        <Route
+          path="/login"
           element={
             <AuthLayout>
               <Login />

@@ -1,33 +1,15 @@
-import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCombobox } from 'downshift';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { searchMedia, getMediaDetails, getPosterImage } from '../../lib/api/media';
+import { useMediaSearch } from '../../hooks/useMediaSearch';
 import { Button } from '../../components/ui/button';
 import { MediaDetailsDTO } from '../../lib/api/contracts/media';
-import { ReferenceType } from '../../lib/api/contracts/common';
 import { createReview } from '../../lib/api/reviews';
 import { GoToDashboard } from '../../components/ui/goToDashboard';
-
-const Star = ({ filled, onClick }: { filled: boolean; onClick: () => void }) => (
-  <img
-    src={filled ? "/ic-baseline-star.svg" : "/ic-baseline-star-border.svg"}
-    alt={filled ? "filled star" : "empty star"}
-    className="w-8 h-8 cursor-pointer"
-    onClick={onClick}
-  />
-);
-
-const StarRating = ({ rating, setRating }: { rating: number; setRating: (rating: number) => void }) => {
-  return (
-    <div className="flex">
-      {[...Array(10)].map((_, i) => (
-        <Star key={i} filled={i < rating} onClick={() => setRating(i + 1)} />
-      ))}
-    </div>
-  );
-};
+import toast from 'react-hot-toast';
+import { StarRating } from '../../components/starRating';
+import { ReferenceType } from '../../lib/api/contracts/common';
 
 const CreateReviewContent = () => {
   const { mediaType } = useParams<{ mediaType: string }>();
@@ -37,38 +19,8 @@ const CreateReviewContent = () => {
   const [rating, setRating] = useLocalStorage('review_rating', 0);
   const [reviewContent, setReviewContent] = useLocalStorage('review_content', '');
   
-  const [searchResults, setSearchResults] = useState<MediaDetailsDTO[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-
   const debouncedSearchTerm = useDebounce(mediaSearch, 500);
-
-  useEffect(() => {
-    const performSearch = async () => {
-      if (debouncedSearchTerm && mediaType) {
-        setIsSearching(true);
-        try {
-          const searchResults = await searchMedia(debouncedSearchTerm, mediaType, 10);
-          const results = await Promise.all(searchResults.map(async (media) => {
-            const details = await getMediaDetails(media.id.toString(), mediaType as ReferenceType);
-            const posterUrl = await getPosterImage(mediaType as ReferenceType, media.id.toString()).catch(() => null);
-            details.posterUrl = posterUrl;
-            return details;
-          }));
-
-          await results;
-          // Ensure results is always an array
-          setSearchResults(Array.isArray(results) ? results : []);
-        } catch (error) {
-          console.error('Error searching media:', error);
-        } finally {
-          setIsSearching(false);
-        }
-      } else {
-        setSearchResults([]);
-      }
-    };
-    performSearch();
-  }, [debouncedSearchTerm, mediaType]);
+  const { searchResults, isSearching } = useMediaSearch(debouncedSearchTerm, mediaType);
 
   const {
     isOpen,
@@ -96,98 +48,115 @@ const CreateReviewContent = () => {
 
   const handleSave = () => {
     if (!selectedMedia) {
-        alert("Please select a media item to review.");
-        return;
+      toast.error("Please select a media item to review.", { id: 'no-media', toasterId: 'page-layout' });
+      return;
     }
     if (rating === 0) {
-        alert("Please provide a rating.");
-        return;
+      toast.error("Please provide a rating.", { id: 'no-rating', toasterId: 'page-layout' });
+      return;
     }
     if (!reviewContent.trim()) {
-        alert("Please write a review.");
-        return;
+      toast.error("Please write a review.", { id: 'no-review', toasterId: 'page-layout' });
+      return;
     }
 
+    let refType = mediaType![0].toUpperCase() + mediaType!.slice(1).toLowerCase();
+
     const reviewData = {
-        referenceId: selectedMedia.id.toString(),
-        mediaType,
-        rating,
-        content: reviewContent,
+      referenceId: selectedMedia.id.toString(),
+      referenceType: ReferenceType[refType as keyof typeof ReferenceType],
+      rating,
+      content: reviewContent,
     };
 
-    console.log(`Saving review: ${JSON.stringify(reviewData)}`);
     // Here you would call your API to save the review
-    createReview(reviewData);
-    // Clear local storage after saving
-    localStorage.removeItem('review_mediaSearch');
-    localStorage.removeItem('review_selectedMedia');
-    localStorage.removeItem('review_rating');
-    localStorage.removeItem('review_content');
-
-    alert("Review saved successfully!");
+    createReview(reviewData)
+    .then(() => {
+      // Clear local storage after saving
+      localStorage.removeItem('review_mediaSearch');
+      localStorage.removeItem('review_selectedMedia');
+      localStorage.removeItem('review_rating');
+      localStorage.removeItem('review_content');
+      toast.success("Review saved successfully!", { id: 'review-saved', toasterId: 'page-layout' });
+      clearData();
+    })
+    .catch(() => {
+      toast.error("Failed to save review. Please try again.", { id: 'review-failed', toasterId: 'page-layout' });
+    });
   };
+
+  const clearData = () => {
+    setMediaSearch("");
+    setRating(0);
+    setReviewContent("");
+    setSelectedMedia(null);
+  }
 
   return (
     <div className="flex-1 w-full flex flex-col items-center overflow-hidden p-10 text-white">
-        <div className="w-full max-w-4xl">
-            <GoToDashboard />
+        <div className="w-full max-w-4xl flex flex-col gap-6">
+            <div>
+                <GoToDashboard />
+            </div>
             <h1 className="[font-family:'Jura',Helvetica] font-bold text-4xl mb-2">Create a New Review</h1>
             <p className="text-lg mb-6">
                 You are reviewing a: <span className="font-bold capitalize bg-purple-600 px-2 py-1 rounded">{mediaType}</span>
             </p>
 
             <div className="space-y-6">
-                <div className="relative">
+                <div>
                     <label htmlFor="media-search" className="block text-sm font-medium mb-2">Search for a {mediaType}</label>
-                    <input
-                        {...getInputProps({
-                            id: 'media-search',
-                            type: 'text',
-                            placeholder: `Search for a ${mediaType}... e.g., "Inception"`,
-                            className: 'w-full p-3 rounded bg-slate-800 border border-slate-600 focus:border-purple-500 focus:outline-none text-white',
-                            autoComplete: 'off',
-                        })}
-                    />
-                    {isSearching && (
-                        <div className="absolute top-3 right-3 w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-                    )}
-                    {isOpen && searchResults.length > 0 && (
-                        <ul
-                            {...getMenuProps()}
-                            className="absolute z-20 w-full bg-slate-900 border border-slate-600 rounded-lg mt-2 max-h-96 overflow-y-auto shadow-lg"
-                        >
-                            {searchResults.map((media, index) => (
-                                <li 
-                                    {...getItemProps({
-                                        item: media,
-                                        index,
-                                    })}
-                                    key={`${media.id}-${index}`}
-                                    className={`p-3 cursor-pointer flex items-start gap-3 border-b border-slate-700 last:border-b-0 transition-colors ${
-                                        highlightedIndex === index ? 'bg-slate-700' : 'hover:bg-slate-800'
-                                    }`}
-                                >
-                                    <img 
-                                        src={media.posterUrl ?? "/entity-photo.svg"} 
-                                        alt={media.title} 
-                                        className="w-12 h-16 object-cover rounded flex-shrink-0"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = '/entity-photo.svg';
-                                        }}
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-white truncate">{media.title}</p>
-                                        <p className="text-sm text-slate-400">{new Date(media.releaseDate ?? 0).getFullYear()}</p>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    {isOpen && mediaSearch && !isSearching && searchResults.length === 0 && (
-                        <div className="absolute z-20 w-full bg-slate-900 border border-slate-600 rounded-lg mt-2 p-4 text-center text-slate-400">
-                            No {mediaType}s found. Try a different search.
-                        </div>
-                    )}
+                    <div className="relative">
+                        <input
+                            {...getInputProps({
+                                id: 'media-search',
+                                type: 'text',
+                                placeholder: `Search for a ${mediaType}... e.g., "Inception"`,
+                                className: 'w-full p-3 rounded bg-slate-800 border border-slate-600 focus:border-purple-500 focus:outline-none text-white',
+                                autoComplete: 'off',
+                            })}
+                        />
+                        {isSearching && (
+                            <div className="absolute top-[calc(50%-0.625rem)] right-3 w-5 h-5 border-2 border-t-transparent border-purple-500 rounded-full animate-spin"></div>
+                        )}
+                        {isOpen && searchResults.length > 0 && (
+                            <ul
+                                {...getMenuProps()}
+                                className="absolute z-20 w-full bg-slate-900 border border-slate-600 rounded-lg mt-2 max-h-96 overflow-y-auto shadow-lg"
+                            >
+                                {searchResults.map((media, index) => (
+                                    <li 
+                                        {...getItemProps({
+                                            item: media,
+                                            index,
+                                        })}
+                                        key={`${media.id}-${index}`}
+                                        className={`p-3 cursor-pointer flex items-start gap-3 border-b border-slate-700 last:border-b-0 transition-colors ${
+                                            highlightedIndex === index ? 'bg-slate-700' : 'hover:bg-slate-800'
+                                        }`}
+                                    >
+                                        <img 
+                                            src={media.posterUrl ?? "/entity-photo.svg"} 
+                                            alt={media.title} 
+                                            className="w-12 h-16 object-cover rounded flex-shrink-0"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = '/entity-photo.svg';
+                                            }}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-white truncate">{media.title}</p>
+                                            <p className="text-sm text-slate-400">{new Date(media.releaseDate ?? 0).getFullYear()}</p>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        {isOpen && mediaSearch && !isSearching && searchResults.length === 0 && (
+                            <div className="absolute z-20 w-full bg-slate-900 border border-slate-600 rounded-lg mt-2 p-4 text-center text-slate-400">
+                                No {mediaType}s found. Try a different search.
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {selectedMedia && (

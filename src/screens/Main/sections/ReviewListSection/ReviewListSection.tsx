@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Button } from "../../../../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { getAllReviews, getMyReviews } from "../../../../lib/api/reviews";
 import { ReviewList } from "../../../../components/ui/reviewList";
 import { Review } from "../../../../lib/models/review";
-import { transformReview } from "../../../../lib/transformers/reviewTransformer";
-import { getMediaDetails, getPosterImage } from "../../../../lib/api/media";
+import { fetchAndEnrichReviews } from "../../../../lib/utils/reviewUtils";
 import { PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,30 +14,73 @@ const categories = [
 ];
 
 export const ReviewsListSection = (): JSX.Element => {
-  const [activeCategory, setActiveCategory] = useState("movies");
+  const [activeCategory, setActiveCategory] = useState("movie");
   const [loading, setLoading] = useState(false);
   const [moreLoading, setMoreLoading] = useState(false);  
   const [reviews, setReviews] = useState<Review[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [allReviews, setAllReviews] = useState<Review[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   const navigate = useNavigate();
+  const observerTarget = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
 
-  const fetchAndEnrichReviews = async (fetchFunction: () => Promise<any>): Promise<Review[]> => {
-    const reviewsData = await fetchFunction();
-    const reviews: Review[] = reviewsData.data.map(transformReview);
-    await Promise.all(reviews.map(async (review) => {
-      try {
-        const mediaDetails = await getMediaDetails(review.referenceId, review.referenceType);
-        const poster = await getPosterImage(review.referenceType, review.referenceId);
-        review.media = mediaDetails;
-        review.media.posterUrl = poster;
-      } catch (error) {
-        console.error(`Error fetching media details for review ${review.id}:`, error);
+  const handleDeleteReview = (deletedReviewId: string) => {
+    setReviews((prevReviews) => prevReviews.filter((review) => review.id !== deletedReviewId));
+    setAllReviews((prevReviews) => prevReviews.filter((review) => review.id !== deletedReviewId));
+  }
+
+  const loadMoreReviews = useCallback(async () => {
+    if (isLoadingRef.current || !hasMore) return;
+    
+    isLoadingRef.current = true;
+    setMoreLoading(true);
+    
+    try {
+      const newReviews = await fetchAndEnrichReviews(() => getAllReviews(currentPage + 1, 5));
+      if (newReviews.length > 0) {
+        setAllReviews((prev) => [...prev, ...newReviews]);
+        setCurrentPage((prev) => prev + 1);
+        setHasMore(newReviews.length === 5);
+      } else {
+        setHasMore(false);
       }
-    }));
+    } catch (error) {
+      console.error("Error loading more reviews:", error);
+    } finally {
+      isLoadingRef.current = false;
+      setMoreLoading(false);
+    }
+  }, [currentPage, hasMore]);
 
-    return reviews;
-  };
+  useEffect(() => {
+    if (activeCategory !== "all" || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingRef.current) {
+          loadMoreReviews();
+        }
+      },
+      { 
+        root: scrollContainerRef.current,
+        threshold: 0.1, 
+        rootMargin: '50px' 
+      }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [activeCategory, hasMore, loadMoreReviews]);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -60,8 +102,10 @@ export const ReviewsListSection = (): JSX.Element => {
     const fetchReviews = async () => {
       setLoading(true);
       try {
-        const enrichedReviews = await fetchAndEnrichReviews(() => getAllReviews(1, 10));
+        const enrichedReviews = await fetchAndEnrichReviews(() => getAllReviews(1, 5));
         setAllReviews(enrichedReviews);
+        setHasMore(enrichedReviews.length === 5);
+        setCurrentPage(1);
       } catch (error) {
         console.error(`Error fetching all reviews: ${error}`);
       } finally {
@@ -121,8 +165,17 @@ export const ReviewsListSection = (): JSX.Element => {
         </div>
       ) : (
         activeCategory === "all" ? 
-          <ReviewList reviews={allReviews} /> :
-          <ReviewList reviews={reviews.filter(review => review.referenceType.toLowerCase() === activeCategory.toLowerCase())} />
+          <ReviewList 
+            reviews={allReviews} 
+            onDelete={handleDeleteReview} 
+            observerTarget={observerTarget}
+            scrollContainerRef={scrollContainerRef}
+            showLoadTrigger={hasMore}
+          /> :
+          <ReviewList 
+            reviews={reviews.filter(review => review.referenceType.toLowerCase() === activeCategory.toLowerCase())} 
+            onDelete={handleDeleteReview} 
+          />
       )}
 
       {        
@@ -149,28 +202,26 @@ export const ReviewsListSection = (): JSX.Element => {
           </div>
         )
       }
-      {
-        activeCategory === "all" && (
+      {/* {
+        activeCategory === "all" && hasMore && !moreLoading && (
           <div className="flex self-end w-full max-h-max px-0 py-2.5">
             <Button
-              onClick={async () => {
-                setMoreLoading(true);
-                try {
-                  const newReviews = await fetchAndEnrichReviews(() => getAllReviews(currentPage + 1, 10));
-                  setAllReviews((prev) => [...prev, ...newReviews]);
-                  setCurrentPage((prev) => prev + 1);
-                } catch (error) {
-                  console.error("Error loading more reviews:", error);
-                } finally {
-                  setMoreLoading(false);
-                }
-              }}
+              onClick={loadMoreReviews}
               className="bg-[#00116a] rounded-lg inline-flex items-center justify-center gap-2.5 p-2 h-auto hover:opacity-90 flex-1"
             >
               <span className="[font-family:'Jura',Helvetica] font-light text-white text-xl tracking-[0] leading-[normal]">
                 Load More Reviews
               </span>
             </Button>
+          </div>
+        )
+      } */}
+      {
+        activeCategory === "all" && !hasMore && allReviews.length > 0 && (
+          <div className="flex justify-center w-full py-4">
+            <span className="[font-family:'Jura',Helvetica] font-light text-slate-400 text-sm">
+              No more reviews to load
+            </span>
           </div>
         )
       }

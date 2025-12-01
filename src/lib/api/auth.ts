@@ -88,6 +88,13 @@ class AuthClient {
     });
   }
 
+  async me(): Promise<User> {
+    if (this.session && this.session.authenticated) {
+      return this.session.user;
+    }
+    throw new Error('No authenticated user');
+  }
+
   async signInWithPassword({ email, password }: { email: string; password: string }): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {

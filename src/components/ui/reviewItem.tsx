@@ -1,17 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import { likeReview, dislikeReview, getReviewById } from "../../lib/api/reviews";
+import { likeReview, dislikeReview, getReviewById, deleteReview } from "../../lib/api/reviews";
 import { Review } from "../../lib/models/review";
 import { Button } from "./button";
 import { Card, CardContent } from "./card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiClient } from "../../lib/api/auth";
+import { MoreHorizontal, PencilIcon, TrashIcon } from "lucide-react";
 
 interface ReviewProps {
     review: Review;
+    onDelete?: () => void;
 }
 
-export const ReviewItem = ({ review }: ReviewProps) => {
+export const ReviewItem = ({ review, onDelete }: ReviewProps) => {
     const navigate = useNavigate();
     const [reviewState, setReviewState] = useState<Review>(review);
+    const [user, setUser] = useState<any>(null);
+    const [showOptions, setShowOptions] = useState(false);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const user = await apiClient.auth.getSession(true);
+            setUser(user);
+        };
+        fetchUser();
+    }, []);
 
     const like = async (reviewId: string) => {
         await likeReview(reviewId);
@@ -139,6 +152,59 @@ export const ReviewItem = ({ review }: ReviewProps) => {
                 </button>
                 </div>
             </div>
+            {user && user.data.session?.user.id == review.authorId && (
+                <div className="relative">
+                    <Button
+                        onClick={() => setShowOptions(!showOptions)}
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-white/10 rounded-full"
+                    >
+                        <MoreHorizontal className="w-6 h-6 text-white" />
+                    </Button>
+                    {showOptions && (
+                        <>
+                            {/* Backdrop to close on outside click */}
+                            <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={() => setShowOptions(false)}
+                            />
+                            
+                            {/* Dropdown menu */}
+                            <div className="absolute right-0 top-full mt-2 min-w-[160px] bg-[#1a1b3a] rounded-lg shadow-xl border border-[#2b41ae] overflow-hidden z-20">
+                                <Button 
+                                    onClick={async () => {
+                                        await deleteReview(reviewState.id);
+                                        setShowOptions(false);
+                                        onDelete?.();
+                                    }}
+                                    variant="ghost"
+                                    className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-none hover:bg-red-500/20 text-white border-0 border-b border-[#2b41ae]"
+                                >
+                                    <TrashIcon className="w-4 h-4 text-red-400" />
+                                    <span className="[font-family:'Jura',Helvetica] font-normal text-sm">
+                                        Delete
+                                    </span>
+                                </Button>
+                                
+                                <Button 
+                                    onClick={() => {
+                                        navigate(`/edit-review/${reviewState.id}`);
+                                        setShowOptions(false);
+                                    }}
+                                    variant="ghost"
+                                    className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-none hover:bg-blue-500/20 text-white border-0"
+                                >
+                                    <PencilIcon className="w-4 h-4 text-blue-400" />
+                                    <span className="[font-family:'Jura',Helvetica] font-normal text-sm">
+                                        Edit
+                                    </span>
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
             </CardContent>
         </Card>
     )

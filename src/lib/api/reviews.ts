@@ -57,6 +57,22 @@ export const deleteReview = async (reviewId: string): Promise<void> => {
     throw new Error('Failed to delete review');
 }
 
+export const updateReview = async (reviewId: string, content: string, rating: number): Promise<ReviewDTO> => {
+    var response: Response = await fetch(`${API_BASE_URL}/api/review/update/`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reviewId, content, rating }),
+    });
+    if (response.ok) {
+      const data: ReviewDTO = await response.json();
+      return data;
+    }
+    throw new Error('Failed to update review');
+}
+
 export const getReviewById = async (reviewId: string): Promise<ReviewDTO> => {
     var response: Response = await fetch(`${API_BASE_URL}/api/review/${reviewId}`, {
         method: 'GET',
