@@ -55,8 +55,7 @@ export const ReviewsListSection = (): JSX.Element => {
   }, [currentPage, hasMore]);
 
   useEffect(() => {
-    if (activeCategory !== "all" || !hasMore) return;
-
+    if (activeCategory !== "all" || !hasMore || !scrollContainerRef.current || !observerTarget.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isLoadingRef.current) {
@@ -80,7 +79,7 @@ export const ReviewsListSection = (): JSX.Element => {
         observer.unobserve(currentTarget);
       }
     };
-  }, [activeCategory, hasMore, loadMoreReviews]);
+  }, [activeCategory, hasMore, loadMoreReviews, scrollContainerRef.current, observerTarget.current]);
 
   useEffect(() => {
     const fetchReviews = async () => {
