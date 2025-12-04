@@ -35,13 +35,13 @@ export const PageLayout = ({ children }: PageLayoutProps): JSX.Element => {
   return (
     <div className="bg-slate-900 h-screen w-full min-w-[1440px] flex flex-col">
       <NavigationSection user={user} loading={loading} />
-        <main className="flex-1 h-full w-full flex flex-col overflow-hidden">
-          {children}
-          <div>
-            <Toaster position="bottom-right" toasterId="page-layout" />
-          </div>
-        </main>
-      <FooterSection />
+      <main className="flex-1 h-full w-full flex flex-col overflow-hidden">
+        {children}
+        <div>
+          <Toaster position="bottom-right" toasterId="page-layout" />
+        </div>
+      </main>
+      {/* <FooterSection /> */}
     </div>
   );
 };

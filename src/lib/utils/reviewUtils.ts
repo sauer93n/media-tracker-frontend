@@ -21,21 +21,23 @@ export const fetchAndEnrichSingleReview = async (
                 review.referenceType
             );
             
+            review.media = mediaDetails;
             const poster = await getPosterImage(
                 review.referenceType,
                 review.referenceId
             );
             
-            review.media = mediaDetails;
             review.media.posterUrl = poster;
-        } catch (error) {
+        } 
+        catch (error) {
             console.error(
                 `fetchAndEnrichSingleReview: Error fetching media details for review ${review.id}:`,
                 error
             );
+        } 
+        finally {
+            return review;
         }
-
-        return review;
     } 
     catch (error) {
         console.error('fetchAndEnrichSingleReview: Error:', error);
@@ -55,24 +57,26 @@ export const fetchAndEnrichReviews = async (
         const reviewsData = await fetchFunction();
         const reviews: Review[] = reviewsData.data.map(transformReview);
 
-        await Promise.all(
+        await Promise.allSettled(
             reviews.map(async (review) => {
                 try {
-                const mediaDetails = await getMediaDetails(
-                    review.referenceId,
-                    review.referenceType
-                );
-                const poster = await getPosterImage(
-                    review.referenceType,
-                    review.referenceId
-                );
-                review.media = mediaDetails;
-                review.media.posterUrl = poster;
-                } catch (error) {
-                console.error(
-                    `Error fetching media details for review ${review.id}:`,
-                    error
-                );
+                    const mediaDetails = await getMediaDetails(
+                        review.referenceId,
+                        review.referenceType
+                    );
+
+                    review.media = mediaDetails;
+                    const poster = await getPosterImage(
+                        review.referenceType,
+                        review.referenceId
+                    );
+                    review.media.posterUrl = poster;
+                } 
+                catch (error) {
+                    console.error(
+                        `Error fetching media details for review ${review.id}:`,
+                        error
+                    );
                 }
             })
         );

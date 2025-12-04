@@ -6,6 +6,7 @@ import { ReferenceType } from './common';
 export type ReviewDTO = {
   id: string;
   authorId: string;
+  authorName: string;
   content: string;
   rating: number;
   isLikedByUser: boolean;

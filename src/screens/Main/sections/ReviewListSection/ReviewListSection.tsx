@@ -85,8 +85,12 @@ export const ReviewsListSection = (): JSX.Element => {
     const fetchReviews = async () => {
       setLoading(true);
       try {
-        const enrichedReviews = await fetchAndEnrichReviews(getMyReviews);
-        setReviews(enrichedReviews);
+        const enrichedMyReviews = await fetchAndEnrichReviews(getMyReviews);
+        const enrichedAllReviews = await fetchAndEnrichReviews(() => getAllReviews(1, 5));
+        setReviews(enrichedMyReviews);
+        setAllReviews(enrichedAllReviews);
+        setHasMore(enrichedAllReviews.length === 5);
+        setCurrentPage(1);
       } catch (error) {
         console.error(`Error fetching my reviews: ${error}`);
       } finally {
@@ -96,24 +100,6 @@ export const ReviewsListSection = (): JSX.Element => {
 
     fetchReviews();
   }, [activeCategory]);
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      setLoading(true);
-      try {
-        const enrichedReviews = await fetchAndEnrichReviews(() => getAllReviews(1, 5));
-        setAllReviews(enrichedReviews);
-        setHasMore(enrichedReviews.length === 5);
-        setCurrentPage(1);
-      } catch (error) {
-        console.error(`Error fetching all reviews: ${error}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReviews();
-  }, []);
 
   return (
     <section className="flex flex-col items-start gap-2.5 px-40 py-2.5 w-full flex-1 overflow-hidden">
@@ -165,14 +151,14 @@ export const ReviewsListSection = (): JSX.Element => {
       ) : (
         activeCategory === "all" ? 
           <ReviewList 
-            reviews={allReviews} 
+            reviews={[...allReviews]} 
             onDelete={handleDeleteReview} 
             observerTarget={observerTarget}
             scrollContainerRef={scrollContainerRef}
             showLoadTrigger={hasMore}
           /> :
           <ReviewList 
-            reviews={reviews.filter(review => review.referenceType.toLowerCase() === activeCategory.toLowerCase())} 
+            reviews={[...reviews.filter(review => review.referenceType.toLowerCase() === activeCategory.toLowerCase())]} 
             onDelete={handleDeleteReview} 
           />
       )}
@@ -201,20 +187,6 @@ export const ReviewsListSection = (): JSX.Element => {
           </div>
         )
       }
-      {/* {
-        activeCategory === "all" && hasMore && !moreLoading && (
-          <div className="flex self-end w-full max-h-max px-0 py-2.5">
-            <Button
-              onClick={loadMoreReviews}
-              className="bg-[#00116a] rounded-lg inline-flex items-center justify-center gap-2.5 p-2 h-auto hover:opacity-90 flex-1"
-            >
-              <span className="[font-family:'Jura',Helvetica] font-light text-white text-xl tracking-[0] leading-[normal]">
-                Load More Reviews
-              </span>
-            </Button>
-          </div>
-        )
-      } */}
       {
         activeCategory === "all" && !hasMore && allReviews.length > 0 && (
           <div className="flex justify-center w-full py-4">

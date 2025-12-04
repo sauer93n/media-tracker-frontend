@@ -1,0 +1,240 @@
+import { MoreHorizontal, TrashIcon, PencilIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { apiClient } from "../../lib/api/auth";
+import { likeReview, getReviewById, dislikeReview, deleteReview } from "../../lib/api/reviews";
+import { getUser } from "../../lib/api/user";
+import { Review } from "../../lib/models/review";
+import { Button } from "./button";
+import { useNavigate } from "react-router-dom";
+import { Spinner } from "../spinner/spinner";
+
+interface ReviewContentProps {
+    review: Review;
+    onDelete?: () => void;
+    viewMode?: 'short' | 'full';
+}
+
+export const ReviewContent = ({ review, onDelete, viewMode = 'short' }: ReviewContentProps) => {
+    const [user, setUser] = useState<any>(null);
+    const [showOptions, setShowOptions] = useState(false);
+    const [reviewState, setReviewState] = useState<Review>(review);
+    const navigate = useNavigate();
+    const [isAuthorLoaded, setIsAuthorLoaded] = useState(false);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const user = await apiClient.auth.getSession(true);
+            setUser(user);
+        };
+        fetchUser();
+    }, []);
+
+    useEffect(() => {
+        const fetchAuthor = async () => {
+            try {
+                const authorData = await getUser(review.authorId);
+                setReviewState((prevState) => ({
+                    ...prevState,
+                    authorName: authorData.username,
+                }));
+            } catch (error) {
+                setReviewState((prevState) => ({
+                    ...prevState,
+                    authorName: "Unknown",
+                }));
+            } finally {
+                setIsAuthorLoaded(true);
+            }
+        };
+
+        fetchAuthor();
+    }, [review]);
+
+    const like = async (reviewId: string) => {
+        await likeReview(reviewId);
+        const updatedReview = await getReviewById(reviewId);
+        setReviewState({...reviewState, likes: updatedReview.likes, dislikes: updatedReview.dislikes, isLikedByUser: updatedReview.isLikedByUser, isDislikedByUser: updatedReview.isDislikedByUser });
+    };
+
+    const dislike = async (reviewId: string) => {
+        await dislikeReview(reviewId);
+        const updatedReview = await getReviewById(reviewId);
+        setReviewState({...reviewState, likes: updatedReview.likes, dislikes: updatedReview.dislikes, isDislikedByUser: updatedReview.isDislikedByUser, isLikedByUser: updatedReview.isLikedByUser });
+    };
+
+    const renderStars = (rating: number) => {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        const emptyStars = 10 - fullStars - (hasHalfStar ? 1 : 0);
+
+        return (
+        <div className="inline-flex items-center justify-center gap-[5px]">
+            {Array.from({ length: fullStars }).map((_, index) => (
+            <img
+                key={`full-${index}`}
+                className="w-6 h-6"
+                alt="Star"
+                src="/ic-baseline-star.svg"
+            />
+            ))}
+            {hasHalfStar && (
+            <img
+                className="w-6 h-6"
+                alt="Half star"
+                src="/ic-baseline-star-half.svg"
+            />
+            )}
+            {Array.from({ length: emptyStars }).map((_, index) => (
+            <img
+                key={`empty-${index}`}
+                className="w-6 h-6"
+                alt="Empty star"
+                src="/ic-baseline-star-border.svg"
+            />
+            ))}
+            <span className="[font-family:'Jura',Helvetica] font-normal text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
+            {rating}/10
+            </span>
+        </div>
+        );
+    };
+
+    return (
+        <>
+            { !isAuthorLoaded && <Spinner /> }
+            { isAuthorLoaded && (
+                <>
+                    <img
+                        className="flex-[0_0_auto] h-[300px]"
+                        alt="Entity photo"
+                        src={reviewState.media?.posterUrl || "/entity-photo.svg"}
+                    />
+
+                    <div className="flex flex-col h-[300px] items-start gap-2.5 pt-2.5 pb-0 px-2.5 flex-1">
+                        <div className="flex flex-1 w-full">
+                            <h2 className="mt-[-1.00px] [font-family:'Jura',Helvetica] font-bold text-white text-4xl tracking-[0] leading-[normal] whitespace-nowrap">
+                                {reviewState.media?.title}
+                            </h2>
+                            {user && user.data.session?.user.id == reviewState.authorId && (
+                                <div className="relative ml-auto">
+                                    <Button
+                                        onClick={() => setShowOptions(!showOptions)}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="hover:bg-white/10 rounded-full"
+                                    >
+                                        <MoreHorizontal className="w-6 h-6 text-white" />
+                                    </Button>
+                                    {showOptions && (
+                                        <>
+                                            {/* Backdrop to close on outside click */}
+                                            <div 
+                                                className="fixed inset-0 z-10" 
+                                                onClick={() => setShowOptions(false)}
+                                            />
+                                            
+                                            {/* Dropdown menu */}
+                                            <div className="absolute right-0 top-full mt-2 min-w-[160px] bg-[#1a1b3a] rounded-lg shadow-xl border border-[#2b41ae] overflow-hidden z-20">
+                                                <Button 
+                                                    onClick={async () => {
+                                                        await deleteReview(reviewState.id);
+                                                        setShowOptions(false);
+                                                        onDelete?.();
+                                                    }}
+                                                    variant="ghost"
+                                                    className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-none hover:bg-red-500/20 text-white border-0 border-b border-[#2b41ae]"
+                                                >
+                                                    <TrashIcon className="w-4 h-4 text-red-400" />
+                                                    <span className="[font-family:'Jura',Helvetica] font-normal text-sm">
+                                                        Delete
+                                                    </span>
+                                                </Button>
+                                                
+                                                <Button 
+                                                    onClick={() => {
+                                                        navigate(`/edit-review/${reviewState.id}`);
+                                                        setShowOptions(false);
+                                                    }}
+                                                    variant="ghost"
+                                                    className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-none hover:bg-blue-500/20 text-white border-0"
+                                                >
+                                                    <PencilIcon className="w-4 h-4 text-blue-400" />
+                                                    <span className="[font-family:'Jura',Helvetica] font-normal text-sm">
+                                                        Edit
+                                                    </span>
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        <span className="mt-[-1.00px] [font-family:'Jura',Helvetica] text-gray-400 tracking-[0] leading-[normal] whitespace-nowrap">
+                            by {reviewState.authorName}
+                        </span>
+
+                        {renderStars(reviewState.rating)}
+
+                        <div className="flex flex-col h-full items-end justify-end gap-2.5 pl-0 pr-[30px] py-0 w-full">
+                            <div className="flex flex-col items-start gap-2.5 w-full h-full">
+                                <p className="[font-family:'Jura',Helvetica] font-normal text-white text-sm tracking-[0] leading-[14.0px] overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:6] [-webkit-box-orient:vertical]">
+                                {reviewState.content}
+                                </p>
+                            </div>
+
+                            <div className="flex items-start gap-2.5 w-full">
+                                <Button
+                                    onClick={() => {
+                                        navigate(`/reviews/${reviewState.id}`);
+                                    }}
+                                    variant="link"
+                                    className="inline-flex items-end gap-2.5 overflow-hidden border-b [border-bottom-style:solid] border-[#0004ff] h-auto p-0 rounded-none"
+                                >
+                                    <span className="mt-[-2.00px] ml-[-1.00px] [font-family:'Jura',Helvetica] font-bold text-[#0004ff] text-xs tracking-[0] leading-[normal] whitespace-nowrap">
+                                        Read full
+                                    </span>
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2.5 px-2.5 py-0 w-full items-center">
+                            <button className={
+                                    "inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer" +
+                                    (reviewState.isLikedByUser ? " opacity-50" : "")}
+                                onClick={() => {
+                                    like(reviewState.id);
+                                }}
+                                >
+                                <img
+                                    className="w-6 h-6"
+                                    alt="Like"
+                                    src="/icon-park-outline-like.svg"
+                                />
+                                <span className="[font-family:'Jura',Helvetica] font-normal text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
+                                    {reviewState.likes}
+                                </span>
+                            </button>
+
+                            <button className={
+                                    "inline-flex gap-[3px] items-center bg-transparent border-0 cursor-pointer" +
+                                    (reviewState.isDislikedByUser ? " opacity-50" : "")}
+                                onClick={() => {
+                                    dislike(reviewState.id);
+                                }}
+                            >
+                                <img
+                                    className="w-6 h-6"
+                                    alt="Dislike"
+                                    src="/icon-park-outline-dislike.svg"
+                                />
+                                <span className="[font-family:'Jura',Helvetica] font-normal text-white text-xs tracking-[0] leading-[normal] whitespace-nowrap">
+                                    {reviewState.dislikes}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+        </>
+    )
+}
