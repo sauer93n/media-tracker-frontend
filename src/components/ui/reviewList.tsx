@@ -5,7 +5,7 @@ export interface ReviewListProps {
   reviews: Review[];
   onDelete?: (deletedReviewId: string) => void;
   observerTarget?: React.RefObject<HTMLDivElement>;
-  showLoadTrigger?: boolean;
+  showLoadTrigger: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 

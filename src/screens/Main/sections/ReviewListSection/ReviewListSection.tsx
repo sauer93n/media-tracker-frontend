@@ -153,7 +153,7 @@ export const ReviewsListSection = (): JSX.Element => {
           <ReviewList 
             reviews={[...allReviews]} 
             onDelete={handleDeleteReview} 
-            observerTarget={observerTarget}
+            observerTarget={observerTarget ?? null}
             scrollContainerRef={scrollContainerRef}
             showLoadTrigger={hasMore}
           /> :
