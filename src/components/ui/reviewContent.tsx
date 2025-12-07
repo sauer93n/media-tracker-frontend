@@ -134,7 +134,9 @@ export const ReviewContent = ({ review, onDelete, viewMode = 'short' }: ReviewCo
 
                                 <div className="flex flex-col h-full items-end justify-end gap-2.5 pl-0 pr-[30px] py-0 w-full">
                                     <div className="flex flex-col items-start gap-2.5 w-full h-full">
-                                        <p className="[font-family:'Jura',Helvetica] font-normal text-white text-sm tracking-[0] leading-[14.0px] overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:6] [-webkit-box-orient:vertical]">
+                                        <p 
+                                            style={{ lineHeight: 'normal' }}
+                                            className="[font-family:'Jura',Helvetica] font-normal text-white text-sm tracking-[0] leading-[14.0px] overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:6] [-webkit-box-orient:vertical]">
                                             {reviewState.content}
                                         </p>
                                     </div>
@@ -223,7 +225,9 @@ export const ReviewContent = ({ review, onDelete, viewMode = 'short' }: ReviewCo
 
                                     {/* Review Content - Scrollable */}
                                     <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-[#7167fa] scrollbar-track-[#1a1b3a] hover:scrollbar-thumb-[#8b7ff8]">
-                                        <p className="[font-family:'Jura',Helvetica] font-normal text-white text-base leading-[1.8] whitespace-pre-wrap">
+                                        <p 
+                                            style={{ lineHeight: 'normal' }}
+                                            className="[font-family:'Jura',Helvetica] font-normal text-white text-base leading-[1.8] whitespace-pre-wrap">
                                             {reviewState.content}
                                         </p>
                                     </div>
