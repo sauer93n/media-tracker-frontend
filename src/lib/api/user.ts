@@ -1,18 +1,12 @@
 import { UserDTO } from './contracts/user';
-
-const API_BASE_URL = window.config?.apiUrl || 'http://localhost:5261';
+import { apiRequest, buildApiUrl } from './apiClient';
 
 export const getUser = async (userId: string): Promise<UserDTO> => {
-    var response: Response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        credentials: 'include',
-    });
-    if (response.ok) {
-        const data = await response.json();
-        return data.user as UserDTO;
-    }
-    throw new Error('Failed to fetch user details');
+    const url = buildApiUrl(`/api/users/${userId}`);
+    const response = await apiRequest<{ user: UserDTO }>(
+        url,
+        { headers: { "Content-Type": "application/json" } },
+        'Failed to fetch user details'
+    );
+    return response.user;
 }

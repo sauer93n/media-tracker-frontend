@@ -1,7 +1,8 @@
-import { LogInIcon, LogOutIcon, UserPlusIcon } from "lucide-react";
+import { LogInIcon, LogOutIcon, UserPlusIcon, UserIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../../components/ui/button";
 import { apiClient, type User } from "../../../../lib/api/auth";
+import { JSX } from "react";
 
 interface NavigationSectionProps {
   user: User | null;
@@ -27,9 +28,15 @@ export const NavigationSection = ({ user, loading }: NavigationSectionProps): JS
           <>
             {user ? (
               <div className="inline-flex items-center gap-4">
-                <span className="[font-family:'Jura',Helvetica] font-normal text-white text-sm tracking-[0] leading-[normal]">
-                  {user.username}
-                </span>
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="inline-flex items-center gap-2 bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <UserIcon className="w-5 h-5 text-white" />
+                  <span className="[font-family:'Jura',Helvetica] font-normal text-white text-sm tracking-[0] leading-[normal]">
+                    {user.username}
+                  </span>
+                </button>
                 <Button
                   onClick={handleSignOut}
                   className="bg-[#00116a] rounded-lg inline-flex items-center justify-center gap-2.5 p-2 h-auto hover:opacity-90"

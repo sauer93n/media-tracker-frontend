@@ -9,6 +9,7 @@ import { PageLayout } from "./components/layout/PageLayout";
 import { AuthLayout } from "./components/layout/AuthLayout";
 import { UpdateReview } from "./screens/UpdateReview";
 import { ReviewDetails } from "./screens/ReviewDetails";
+import { UserProfile } from "./screens/UserProfile";
 
 createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>
@@ -43,6 +44,14 @@ createRoot(document.getElementById("app") as HTMLElement).render(
           element={
             <PageLayout>
               <ReviewDetails />
+            </PageLayout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PageLayout>
+              <UserProfile />
             </PageLayout>
           }
         />

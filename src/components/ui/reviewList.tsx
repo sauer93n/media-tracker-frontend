@@ -4,9 +4,9 @@ import { ReviewItem } from "./reviewItem";
 export interface ReviewListProps {
   reviews: Review[];
   onDelete?: (deletedReviewId: string) => void;
-  observerTarget?: React.RefObject<HTMLDivElement>;
-  showLoadTrigger: boolean;
-  scrollContainerRef?: React.RefObject<HTMLDivElement>;
+  observerTarget?: React.RefObject<HTMLDivElement | null>;
+  showLoadTrigger?: boolean;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ReviewList = ({ reviews, onDelete, observerTarget, showLoadTrigger, scrollContainerRef }: ReviewListProps) => {

@@ -10,6 +10,7 @@ import { GoToDashboard } from '../../components/ui/goToDashboard';
 import toast from 'react-hot-toast';
 import { StarRating } from '../../components/starRating';
 import { ReferenceType } from '../../lib/api/contracts/common';
+import { JSX } from 'react';
 
 const CreateReviewContent = () => {
   const { mediaType } = useParams<{ mediaType: string }>();
@@ -80,8 +81,20 @@ const CreateReviewContent = () => {
       toast.success("Review saved successfully!", { id: 'review-saved', toasterId: 'page-layout' });
       clearData();
     })
-    .catch(() => {
-      toast.error("Failed to save review. Please try again.", { id: 'review-failed', toasterId: 'page-layout' });
+    .catch((error) => {
+      let errorMessage = "Something went wrong. Please try again.";
+      
+      // Check if error response has error details from server
+      if (error?.response?.data && Array.isArray(error.response.data)) {
+        const serverError = error.response.data[0];
+        if (serverError?.message) {
+          errorMessage = serverError.message;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage, { id: 'review-failed', toasterId: 'page-layout' });
     });
   };
 

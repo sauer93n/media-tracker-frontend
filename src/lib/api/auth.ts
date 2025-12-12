@@ -1,4 +1,7 @@
 /// <reference types="vite/client" />
+
+import { buildApiUrl } from './apiClient';
+
 /**
  * Secure API Client for Authentication
  * 
@@ -17,8 +20,6 @@
  * - Authentication state is verified via /api/auth/me endpoint
  * - Tokens are managed entirely by the server through cookies
  */
-
-const API_BASE_URL = window.config?.apiUrl || 'http://localhost:5261';
 
 export interface User {
   id: string;
@@ -51,7 +52,8 @@ class AuthClient {
 
   private async checkAuthStatus(): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      const url = buildApiUrl('/api/auth/me');
+      const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
       });
@@ -97,7 +99,8 @@ class AuthClient {
 
   async signInWithPassword({ email, password }: { email: string; password: string }): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const url = buildApiUrl('/api/auth/login');
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,9 +112,10 @@ class AuthClient {
       const data = await response.json();
 
       if (!response.ok) {
+        const errorMessage = this.extractErrorMessage(data);
         return {
           user: null,
-          error: { message: data.message || 'Login failed' },
+          error: { message: errorMessage },
         };
       }
 
@@ -150,7 +154,8 @@ class AuthClient {
 
   async signUp({ username, email, password }: { username: string; email: string; password: string }): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const url = buildApiUrl('/api/auth/register');
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,9 +167,10 @@ class AuthClient {
       const data = await response.json();
 
       if (!response.ok) {
+        const errorMessage = this.extractErrorMessage(data);
         return {
           user: null,
-          error: { message: data.message || 'Registration failed' },
+          error: { message: errorMessage },
         };
       }
 
@@ -189,7 +195,8 @@ class AuthClient {
 
   async signOut(): Promise<{ error: { message: string } | null }> {
     try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      const url = buildApiUrl('/api/auth/logout');
+      await fetch(url, {
         method: 'POST',
         credentials: 'include',
       });
@@ -233,6 +240,18 @@ class AuthClient {
         },
       },
     };
+  }
+
+  private extractErrorMessage(data: any): string {
+    // Handle array of error objects (server error format)
+    if (Array.isArray(data) && data.length > 0 && data[0]?.message) {
+      return data[0].message;
+    }
+    // Handle single error object
+    if (data?.message) {
+      return data.message;
+    }
+    return 'An error occurred';
   }
 }
 

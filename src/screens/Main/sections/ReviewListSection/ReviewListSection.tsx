@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, JSX } from "react";
 import { Button } from "../../../../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { getAllReviews, getMyReviews } from "../../../../lib/api/reviews";
@@ -18,33 +18,71 @@ export const ReviewsListSection = (): JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [moreLoading, setMoreLoading] = useState(false);  
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [hasMoreMyReviews, setHasMoreMyReviews] = useState(true);
+  
   const navigate = useNavigate();
   const observerTarget = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
+  
+  // Use refs for page numbers and hasMore to avoid stale closure issues
+  const currentPageRef = useRef(1);
+  const myReviewsPageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+  const hasMoreMyReviewsRef = useRef(true);
 
   const handleDeleteReview = (deletedReviewId: string) => {
     setReviews((prevReviews) => prevReviews.filter((review) => review.id !== deletedReviewId));
     setAllReviews((prevReviews) => prevReviews.filter((review) => review.id !== deletedReviewId));
   }
 
+  // Get filtered reviews for current category
+  const filteredMyReviews = reviews.filter(
+    review => review.referenceType.toLowerCase() === activeCategory.toLowerCase()
+  );
+
   const loadMoreReviews = useCallback(async () => {
-    if (isLoadingRef.current || !hasMore) return;
+    if (isLoadingRef.current) return;
+    
+    const isAllReviews = activeCategory === "all";
+    const canLoadMore = isAllReviews ? hasMoreRef.current : hasMoreMyReviewsRef.current;
+    
+    if (!canLoadMore) return;
     
     isLoadingRef.current = true;
     setMoreLoading(true);
     
     try {
-      const newReviews = await fetchAndEnrichReviews(() => getAllReviews(currentPage + 1, 5));
-      if (newReviews.length > 0) {
-        setAllReviews((prev) => [...prev, ...newReviews]);
-        setCurrentPage((prev) => prev + 1);
-        setHasMore(newReviews.length === 5);
+      if (isAllReviews) {
+        const nextPage = currentPageRef.current + 1;
+        const newReviews = await fetchAndEnrichReviews(() => getAllReviews(nextPage, 5));
+        
+        if (newReviews.length > 0) {
+          currentPageRef.current = nextPage;
+          setAllReviews((prev) => [...prev, ...newReviews]);
+          const hasMoreData = newReviews.length === 5;
+          hasMoreRef.current = hasMoreData;
+          setHasMore(hasMoreData);
+        } else {
+          hasMoreRef.current = false;
+          setHasMore(false);
+        }
       } else {
-        setHasMore(false);
+        const nextPage = myReviewsPageRef.current + 1;
+        const newReviews = await fetchAndEnrichReviews(() => getMyReviews(activeCategory, nextPage, 5));
+        
+        if (newReviews.length > 0) {
+          myReviewsPageRef.current = nextPage;
+          setReviews((prev) => [...prev, ...newReviews]);
+          const hasMoreData = newReviews.length === 5;
+          hasMoreMyReviewsRef.current = hasMoreData;
+          setHasMoreMyReviews(hasMoreData);
+        } else {
+          hasMoreMyReviewsRef.current = false;
+          setHasMoreMyReviews(false);
+        }
       }
     } catch (error) {
       console.error("Error loading more reviews:", error);
@@ -52,13 +90,15 @@ export const ReviewsListSection = (): JSX.Element => {
       isLoadingRef.current = false;
       setMoreLoading(false);
     }
-  }, [currentPage, hasMore]);
+  }, [currentPageRef, hasMore, activeCategory]);
 
   useEffect(() => {
-    if (activeCategory !== "all" || !hasMore || !scrollContainerRef.current || !observerTarget.current) return;
+    if (!scrollContainerRef.current || !observerTarget.current) return;
+    
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoadingRef.current) {
+        const currentHasMore = activeCategory === "all" ? hasMoreRef.current : hasMoreMyReviewsRef.current;
+        if (entries[0].isIntersecting && !isLoadingRef.current && currentHasMore) {
           loadMoreReviews();
         }
       },
@@ -85,12 +125,22 @@ export const ReviewsListSection = (): JSX.Element => {
     const fetchReviews = async () => {
       setLoading(true);
       try {
-        const enrichedMyReviews = await fetchAndEnrichReviews(getMyReviews);
+        const enrichedMyReviews = await fetchAndEnrichReviews(() => getMyReviews(activeCategory, 1, 5));
         const enrichedAllReviews = await fetchAndEnrichReviews(() => getAllReviews(1, 5));
         setReviews(enrichedMyReviews);
         setAllReviews(enrichedAllReviews);
-        setHasMore(enrichedAllReviews.length === 5);
-        setCurrentPage(1);
+        
+        const hasMoreAllReviews = enrichedAllReviews.length === 5;
+        const hasMoreUserReviews = enrichedMyReviews.length === 5;
+        
+        setHasMore(hasMoreAllReviews);
+        setHasMoreMyReviews(hasMoreUserReviews);
+        hasMoreRef.current = hasMoreAllReviews;
+        hasMoreMyReviewsRef.current = hasMoreUserReviews;
+        
+        // Reset page refs
+        currentPageRef.current = 1;
+        myReviewsPageRef.current = 1;
       } catch (error) {
         console.error(`Error fetching my reviews: ${error}`);
       } finally {
@@ -126,9 +176,8 @@ export const ReviewsListSection = (): JSX.Element => {
               </TabsTrigger>
             ))}
             <TabsTrigger
-                onClick={() => setActiveCategory("all")}
                 key={"all"}
-                value={"Reviews"}
+                value={"all"}
                 className={`inline-flex items-center justify-center gap-2.5 px-8 py-[11px] rounded-lg overflow-hidden border-b [border-bottom-style:solid] h-auto ${
                   activeCategory === "all"
                     ? "border-[#7167fa]"
@@ -153,13 +202,16 @@ export const ReviewsListSection = (): JSX.Element => {
           <ReviewList 
             reviews={[...allReviews]} 
             onDelete={handleDeleteReview} 
-            observerTarget={observerTarget ?? null}
+            observerTarget={observerTarget}
             scrollContainerRef={scrollContainerRef}
             showLoadTrigger={hasMore}
           /> :
           <ReviewList 
-            reviews={[...reviews.filter(review => review.referenceType.toLowerCase() === activeCategory.toLowerCase())]} 
-            onDelete={handleDeleteReview} 
+            reviews={filteredMyReviews} 
+            onDelete={handleDeleteReview}
+            observerTarget={observerTarget}
+            scrollContainerRef={scrollContainerRef}
+            showLoadTrigger={hasMoreMyReviews}
           />
       )}
 
@@ -189,6 +241,15 @@ export const ReviewsListSection = (): JSX.Element => {
       }
       {
         activeCategory === "all" && !hasMore && allReviews.length > 0 && (
+          <div className="flex justify-center w-full py-4">
+            <span className="[font-family:'Jura',Helvetica] font-light text-slate-400 text-sm">
+              No more reviews to load
+            </span>
+          </div>
+        )
+      }
+      {
+        activeCategory !== "all" && !hasMoreMyReviews && filteredMyReviews.length > 0 && (
           <div className="flex justify-center w-full py-4">
             <span className="[font-family:'Jura',Helvetica] font-light text-slate-400 text-sm">
               No more reviews to load
