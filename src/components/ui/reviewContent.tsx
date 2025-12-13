@@ -108,27 +108,30 @@ export const ReviewContent = ({ review, onDelete, viewMode = 'short' }: ReviewCo
                         <div className="flex overflow-hidden w-full gap-5">
                             <div className="rounded-lg overflow-hidden flex-shrink-0">
                                 <img
-                                    className="flex-[0_0_auto] h-[300px] w-[210px] object-cover"
+                                    className="flex-[0_0_auto] h-[340px] w-[210px] object-cover"
                                     alt="Entity photo"
                                     src={reviewState.media?.posterUrl || "/entity-photo.svg"}
                                 />
                             </div>
 
-                            <div className="flex flex-col h-[300px] items-start gap-2.5 pt-2.5 pb-0 px-2.5 flex-1">
-                                <div className="flex flex-1 w-full">
-                                    <h2 className="mt-[-1.00px] [font-family:'Jura',Helvetica] font-bold text-white text-4xl tracking-[0] leading-[normal] whitespace-nowrap">
+                            <div className="flex flex-col h-[340px] items-start gap-2.5 pt-2.5 pb-0 px-2.5 flex-1">
+                                <div className="flex flex-col w-full gap-1 min-w-0">
+                                    <h2 className="mt-[-1.00px] [font-family:'Jura',Helvetica] font-bold text-white text-4xl tracking-[0] leading-tight overflow-hidden">
                                         {reviewState.media?.title}
                                     </h2>
-                                    {user && user.data.session?.user.id == reviewState.authorId && (
+                                    <span className="mt-[-1.00px] [font-family:'Jura',Helvetica] text-gray-400 tracking-[0] leading-[normal] truncate">
+                                        by {reviewState.authorName}
+                                    </span>
+                                </div>
+
+                                {user && user.data.session?.user.id == reviewState.authorId && (
+                                    <div className="absolute top-5 right-5">
                                         <ReviewOptionsMenu 
                                             reviewId={reviewState.id} 
                                             onDelete={onDelete}
                                         />
-                                    )}
-                                </div>
-                                <span className="mt-[-1.00px] [font-family:'Jura',Helvetica] text-gray-400 tracking-[0] leading-[normal] whitespace-nowrap">
-                                    by {reviewState.authorName}
-                                </span>
+                                    </div>
+                                )}
 
                                 {renderStars(reviewState.rating)}
 

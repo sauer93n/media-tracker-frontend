@@ -22,12 +22,16 @@ export const fetchAndEnrichSingleReview = async (
             );
             
             review.media = mediaDetails;
-            const poster = await getPosterImage(
-                review.referenceType,
-                review.referenceId
-            );
-            
-            review.media.posterUrl = poster;
+            try {
+                const poster = await getPosterImage(
+                    review.referenceType,
+                    review.referenceId
+                );
+                review.media.posterUrl = poster;
+            } catch (error) {
+                console.warn(`Failed to load poster for review ${review.id}:`, error);
+                review.media.posterUrl = null;
+            }
         } 
         catch (error) {
             console.error(
@@ -66,11 +70,16 @@ export const fetchAndEnrichReviews = async (
                     );
 
                     review.media = mediaDetails;
-                    const poster = await getPosterImage(
-                        review.referenceType,
-                        review.referenceId
-                    );
-                    review.media.posterUrl = poster;
+                    try {
+                        const poster = await getPosterImage(
+                            review.referenceType,
+                            review.referenceId
+                        );
+                        review.media.posterUrl = poster;
+                    } catch (error) {
+                        console.warn(`Failed to load poster for review ${review.id}:`, error);
+                        review.media.posterUrl = null;
+                    }
                 } 
                 catch (error) {
                     console.error(

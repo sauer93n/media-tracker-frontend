@@ -4,13 +4,13 @@ import { apiRequest, buildApiUrl } from "./apiClient";
 
 export const getPosterImage = async (referenceType: ReferenceType, referenceId: string): Promise<string> => {
     const url = buildApiUrl(`/api/media/poster/${referenceType}/${referenceId}`);
-    const blob = await apiRequest<Blob>(
-        url,
-        {
-            headers: { "Content-Type": "image/jpeg" }
-        },
-        'Failed to fetch poster image'
-    );
+    const response = await fetch(url, { credentials: 'include' });
+    
+    if (!response.ok) {
+        throw new Error('Failed to fetch poster image');
+    }
+    
+    const blob = await response.blob();
     return URL.createObjectURL(blob);
 }
 

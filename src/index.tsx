@@ -56,6 +56,14 @@ createRoot(document.getElementById("app") as HTMLElement).render(
           }
         />
         <Route
+          path="/profile/:userId"
+          element={
+            <PageLayout>
+              <UserProfile />
+            </PageLayout>
+          }
+        />
+        <Route
           path="/login"
           element={
             <AuthLayout>

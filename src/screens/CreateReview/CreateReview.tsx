@@ -35,6 +35,10 @@ const CreateReviewContent = () => {
     inputValue: mediaSearch,
     onInputValueChange: ({ inputValue: newInputValue }) => {
       setMediaSearch(newInputValue);
+      // Clear selected media when search input changes to prevent mismatches
+      if (newInputValue !== selectedMedia?.title) {
+        setSelectedMedia(null);
+      }
     },
     onSelectedItemChange: ({ selectedItem }) => {
       if (selectedItem) {

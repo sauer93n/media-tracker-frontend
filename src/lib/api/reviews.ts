@@ -14,6 +14,11 @@ export const getMyReviews = async (referenceType: string, pageNumber: number = 1
     return apiRequest<PagedResult<ReviewDTO>>(url, {}, 'Failed to fetch my reviews');
 }
 
+export const getUserReviews = async (userId: string, pageNumber: number = 1, pageSize: number = 100): Promise<PagedResult<ReviewDTO>> => {
+    const url = buildApiUrl(`/api/review/user/${userId}`, { pageNumber, pageSize });
+    return apiRequest<PagedResult<ReviewDTO>>(url, {}, 'Failed to fetch user reviews');
+}
+
 export const createReview = async (review: Partial<ReviewDTO>): Promise<ReviewDTO> => {
     const url = buildApiUrl('/api/review/create');
     return apiRequest<ReviewDTO>(

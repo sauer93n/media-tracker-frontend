@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, JSX } from "react";
 import { useLocation } from "react-router-dom";
-import { FooterSection } from "../../screens/Main/sections/FooterSection";
 import { NavigationSection } from "../../screens/Main/sections/NavigationSection";
 import { apiClient, type User } from "../../lib/api/auth";
 import { Toaster } from "react-hot-toast";
@@ -22,7 +21,7 @@ export const PageLayout = ({ children }: PageLayoutProps): JSX.Element => {
         const { data: { session } } = await apiClient.auth.getSession(true);
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error("Error checking auth in Layout:", error);
+        console.error("[PageLayout] Error checking auth:", error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -41,7 +40,6 @@ export const PageLayout = ({ children }: PageLayoutProps): JSX.Element => {
           <Toaster position="bottom-right" toasterId="page-layout" />
         </div>
       </main>
-      {/* <FooterSection /> */}
     </div>
   );
 };

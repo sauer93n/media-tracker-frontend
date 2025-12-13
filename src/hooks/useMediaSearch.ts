@@ -15,8 +15,13 @@ export const useMediaSearch = (searchTerm: string, mediaType: string | undefined
           const searchResults = await searchMedia(searchTerm, mediaType, 10);
           const results = await Promise.all(searchResults.map(async (media) => {
             const details = await getMediaDetails(media.id.toString(), mediaType as ReferenceType);
-            const posterUrl = await getPosterImage(mediaType as ReferenceType, media.id.toString()).catch(() => null);
-            details.posterUrl = posterUrl;
+            try {
+              const posterUrl = await getPosterImage(mediaType as ReferenceType, media.id.toString());
+              details.posterUrl = posterUrl;
+            } catch (error) {
+              console.warn(`Failed to load poster for ${media.title}:`, error);
+              details.posterUrl = null;
+            }
             return details;
           }));
 

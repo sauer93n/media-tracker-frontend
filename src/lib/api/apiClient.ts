@@ -31,6 +31,16 @@ export const apiRequest = async <T>(
     return await response.json();
   }
 
+  // Handle 401 Unauthorized - redirect to login
+  if (response.status === 401) {
+    // Clear any auth data and redirect to login
+    window.location.href = '/login';
+    // Keep the error for consistency
+    const error = new Error('Unauthorized') as ApiError;
+    error.response = { data: null };
+    throw error;
+  }
+
   const errorData = await response.json().catch(() => null);
   const error = new Error(errorMessage) as ApiError;
   error.response = { data: errorData };
